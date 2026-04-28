@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,45 +20,36 @@ public class WorkerService {
     private final ResultRepository resultRepository;
 
     @Transactional
-    public boolean processNext(String workerId) {
+    public int processBatch(String workerId, int batchSize) {
 
-        Optional<InputEntity> optionalInput = inputRepository.findNextPendingForUpdate();
+        var inputs = inputRepository.findBatchForUpdate(batchSize);
 
-        if (optionalInput.isEmpty()) {
-            return false;
+        if (inputs.isEmpty()) {
+            return 0;
         }
 
-        InputEntity input = optionalInput.get();
-
         // Marcar como en proceso
-        input.setStatus("in_process");
-        inputRepository.save(input);
+        inputs.forEach(input -> input.setStatus("in_process"));
 
-        // Simula procesamiento
-        String processedResult = processData(input.getDescription());
+        // Crear resultados en memoria
+        var results = inputs.stream().map(input -> {
+            ResultEntity result = new ResultEntity();
+            result.setInputId(input.getId());
+            result.setWorkerIdentifier(workerId);
+            result.setResult(processData(input.getDescription()));
+            result.setDate(LocalDateTime.now());
+            return result;
+        }).toList();
 
-        // Guardar resultado
-        ResultEntity result = new ResultEntity();
-        result.setInputId(input.getId());
-        result.setWorkerIdentifier(workerId);
-        result.setResult(processedResult);
-        result.setDate(LocalDateTime.now());
+        resultRepository.saveAll(results);
 
-        resultRepository.save(result);
+        // Marcar como procesados
+        inputs.forEach(input -> input.setStatus("processed"));
 
-        // Marcar como procesado
-        input.setStatus("processed");
-        inputRepository.save(input);
-
-        return true;
+        return inputs.size();
     }
 
     private String processData(String data) {
-        /* try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }*/
         return "processed: " + data;
     }
 }
