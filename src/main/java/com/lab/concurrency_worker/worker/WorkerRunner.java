@@ -15,7 +15,8 @@ public class WorkerRunner implements CommandLineRunner {
     @Override
     public void run(String @NonNull ... args) {
 
-        String workerId = System.getenv().getOrDefault("WORKER_ID", "worker-default");
+        // String workerId = System.getenv().getOrDefault("WORKER_ID", "worker-default");
+        String workerId = System.getenv("HOSTNAME");
 
         while (true) {
 
@@ -25,7 +26,7 @@ public class WorkerRunner implements CommandLineRunner {
                 System.out.println(workerId + " - No hay más tareas. Esperando...");
 
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;

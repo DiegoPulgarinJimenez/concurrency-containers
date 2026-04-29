@@ -1,0 +1,38 @@
+
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: concurrency_db
+      POSTGRES_USER: docker_concurrency_user
+      POSTGRES_PASSWORD: tu_password_segura_docker
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U docker_concurrency_user -d concurrency_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/concurrency_db
+      SPRING_DATASOURCE_USERNAME: docker_concurrency_user
+      SPRING_DATASOURCE_PASSWORD: tu_password_segura_docker
+      # WORKER_ID: ${COMPOSE_PROJECT_NAME:-concurrency-worker}-worker
+      WORKER_ID: System.getenv("HOSTNAME")
+    volumes:
+      - shared-data:/data
+
+volumes:
+  postgres-data:
+  shared-data:
