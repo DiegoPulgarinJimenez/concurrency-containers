@@ -29,7 +29,8 @@ services:
       SPRING_DATASOURCE_USERNAME: docker_concurrency_user
       SPRING_DATASOURCE_PASSWORD: tu_password_segura_docker
       # WORKER_ID: ${COMPOSE_PROJECT_NAME:-concurrency-worker}-worker
-      WORKER_ID: System.getenv("HOSTNAME")
+      # WORKER_ID: System.getenv("HOSTNAME")
+      WORKER_ID: ${HOSTNAME}
     volumes:
       - shared-data:/data
 

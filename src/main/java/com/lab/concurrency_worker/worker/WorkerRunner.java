@@ -6,6 +6,8 @@ import com.lab.concurrency_worker.application.service.WorkerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.net.UnknownHostException;
+
 @Component
 @RequiredArgsConstructor
 public class WorkerRunner implements CommandLineRunner {
@@ -13,10 +15,12 @@ public class WorkerRunner implements CommandLineRunner {
     private final WorkerService workerService;
 
     @Override
-    public void run(String @NonNull ... args) {
+    public void run(String @NonNull ... args) throws UnknownHostException {
 
         // String workerId = System.getenv().getOrDefault("WORKER_ID", "worker-default");
-        String workerId = System.getenv("HOSTNAME");
+        String fullName = java.net.InetAddress.getLocalHost().getHostName();
+        String workerId = fullName.substring(fullName.lastIndexOf("-") + 1);
+        workerId = "worker-" + workerId;
 
         while (true) {
 
